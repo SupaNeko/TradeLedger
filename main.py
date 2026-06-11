@@ -8,7 +8,7 @@ from models import (
     LoginPayload, AccountCreate, AccountUpdate,
     CategoryCreate, ProductCreate, TradeBuy, TradeSell
 )
-from auth import verify_password, create_session, delete_session, require_auth
+from auth import check_password, create_session, delete_session, require_auth, require_admin
 from services.calculator import calc_account_stats, validate_buy, validate_sell, calc_position
 
 load_dotenv()
@@ -21,10 +21,11 @@ app = FastAPI()
 # API routes
 @app.post("/api/auth/login")
 def login(payload: LoginPayload):
-    if not verify_password(payload.password):
+    role = check_password(payload.password)
+    if not role:
         raise HTTPException(status_code=401, detail="Invalid password")
-    token = create_session()
-    response = JSONResponse({"ok": True})
+    token = create_session(role)
+    response = JSONResponse({"role": role})
     response.set_cookie(key="tradeledger_session", value=token, httponly=True, samesite="lax")
     return response
 
@@ -39,7 +40,7 @@ def logout(request: Request):
 
 @app.get("/api/auth/me")
 def auth_me(user=Depends(require_auth)):
-    return {"authenticated": True}
+    return {"role": user}
 
 # Accounts
 @app.get("/api/accounts")
@@ -56,7 +57,7 @@ def list_accounts(user=Depends(require_auth)):
     return accounts
 
 @app.post("/api/accounts")
-def create_account(payload: AccountCreate, user=Depends(require_auth)):
+def create_account(payload: AccountCreate, user=Depends(require_admin)):
     with get_db() as conn:
         cur = conn.execute(
             "INSERT INTO accounts (name, initial_capital) VALUES (?, ?)",
@@ -66,7 +67,7 @@ def create_account(payload: AccountCreate, user=Depends(require_auth)):
         return {"id": cur.lastrowid}
 
 @app.put("/api/accounts/{account_id}")
-def update_account(account_id: int, payload: AccountUpdate, user=Depends(require_auth)):
+def update_account(account_id: int, payload: AccountUpdate, user=Depends(require_admin)):
     with get_db() as conn:
         if payload.name is not None:
             conn.execute("UPDATE accounts SET name=? WHERE id=?", (payload.name, account_id))
@@ -76,7 +77,7 @@ def update_account(account_id: int, payload: AccountUpdate, user=Depends(require
     return {"ok": True}
 
 @app.delete("/api/accounts/{account_id}")
-def delete_account(account_id: int, user=Depends(require_auth)):
+def delete_account(account_id: int, user=Depends(require_admin)):
     with get_db() as conn:
         conn.execute("DELETE FROM trades WHERE account_id=?", (account_id,))
         conn.execute("DELETE FROM accounts WHERE id=?", (account_id,))
@@ -91,14 +92,14 @@ def list_categories(user=Depends(require_auth)):
         return [dict(r) for r in rows]
 
 @app.post("/api/categories")
-def create_category(payload: CategoryCreate, user=Depends(require_auth)):
+def create_category(payload: CategoryCreate, user=Depends(require_admin)):
     with get_db() as conn:
         cur = conn.execute("INSERT INTO categories (name) VALUES (?)", (payload.name,))
         conn.commit()
         return {"id": cur.lastrowid}
 
 @app.delete("/api/categories/{category_id}")
-def delete_category(category_id: int, user=Depends(require_auth)):
+def delete_category(category_id: int, user=Depends(require_admin)):
     with get_db() as conn:
         row = conn.execute("SELECT COUNT(*) as c FROM products WHERE category_id=?", (category_id,)).fetchone()
         if row["c"] > 0:
@@ -118,14 +119,14 @@ def list_products(category_id: int = None, user=Depends(require_auth)):
         return [dict(r) for r in rows]
 
 @app.post("/api/products")
-def create_product(payload: ProductCreate, user=Depends(require_auth)):
+def create_product(payload: ProductCreate, user=Depends(require_admin)):
     with get_db() as conn:
         cur = conn.execute("INSERT INTO products (category_id, name) VALUES (?, ?)", (payload.category_id, payload.name))
         conn.commit()
         return {"id": cur.lastrowid}
 
 @app.delete("/api/products/{product_id}")
-def delete_product(product_id: int, user=Depends(require_auth)):
+def delete_product(product_id: int, user=Depends(require_admin)):
     with get_db() as conn:
         row = conn.execute("SELECT COUNT(*) as c FROM trades WHERE product_id=?", (product_id,)).fetchone()
         if row["c"] > 0:
@@ -163,7 +164,7 @@ def list_trades(account_id: int = None, product_id: int = None, category_id: int
         return [dict(r) for r in rows]
 
 @app.post("/api/trades/buy")
-def buy(payload: TradeBuy, user=Depends(require_auth)):
+def buy(payload: TradeBuy, user=Depends(require_admin)):
     ok, msg = validate_buy(payload.account_id, payload.amount, payload.fee)
     if not ok:
         raise HTTPException(status_code=400, detail=msg)
@@ -178,7 +179,7 @@ def buy(payload: TradeBuy, user=Depends(require_auth)):
         return {"id": cur.lastrowid}
 
 @app.post("/api/trades/sell")
-def sell(payload: TradeSell, user=Depends(require_auth)):
+def sell(payload: TradeSell, user=Depends(require_admin)):
     ok, msg, avg_cost = validate_sell(payload.account_id, payload.product_id, payload.quantity)
     if not ok:
         raise HTTPException(status_code=400, detail=msg)
@@ -194,7 +195,7 @@ def sell(payload: TradeSell, user=Depends(require_auth)):
         return {"id": cur.lastrowid, "profit": profit}
 
 @app.delete("/api/trades/{trade_id}")
-def delete_trade(trade_id: int, user=Depends(require_auth)):
+def delete_trade(trade_id: int, user=Depends(require_admin)):
     with get_db() as conn:
         conn.execute("DELETE FROM trades WHERE id=?", (trade_id,))
         conn.commit()

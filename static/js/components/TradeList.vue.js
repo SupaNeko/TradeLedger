@@ -91,7 +91,7 @@ const TradeListPage = {
             <div class="row" v-if="t.platform || t.remark">
               <div style="font-size: 0.85rem; color: var(--text-secondary);">{{ t.platform }} {{ t.remark }}</div>
             </div>
-            <div class="row" style="margin-top: 8px;">
+            <div class="row" style="margin-top: 8px;" v-if="global.role === 'admin'">
               <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem;" @click="remove(t.id)">删除</button>
             </div>
           </div>

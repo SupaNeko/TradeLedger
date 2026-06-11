@@ -47,7 +47,7 @@ const AccountsPage = {
         <h1>账户管理</h1>
       </div>
       <div class="container">
-        <button class="btn btn-primary btn-block mb-2" @click="openCreate">+ 新建账户</button>
+        <button v-if="global.role === 'admin'" class="btn btn-primary btn-block mb-2" @click="openCreate">+ 新建账户</button>
         <div v-if="!accounts.length" style="color: var(--text-secondary); text-align: center; padding: 40px;">暂无账户</div>
         <div class="trade-list" v-else>
           <div class="trade-item" v-for="a in accounts" :key="a.id">
@@ -63,7 +63,7 @@ const AccountsPage = {
               <div>可用: {{ fmt(a.available) }}</div>
               <div>手续费: {{ fmt(a.total_fees) }}</div>
             </div>
-            <div class="row flex gap-2" style="margin-top: 10px;">
+            <div v-if="global.role === 'admin'" class="row flex gap-2" style="margin-top: 10px;">
               <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem; flex:1;" @click="openEdit(a)">编辑</button>
               <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.85rem; flex:1;" @click="remove(a.id)">删除</button>
             </div>

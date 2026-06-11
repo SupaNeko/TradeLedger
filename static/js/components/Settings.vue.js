@@ -50,7 +50,8 @@ const SettingsPage = {
 
     Vue.onMounted(() => { loadCategories(); loadProducts(); });
 
-    return { tab, categories, products, catFilter, newCategory, newProduct, addCategory, removeCategory, addProduct, removeProduct };
+    const global = Vue.inject('global');
+    return { global, tab, categories, products, catFilter, newCategory, newProduct, addCategory, removeCategory, addProduct, removeProduct };
   },
   template: `
     <div class="page-content">
@@ -64,7 +65,7 @@ const SettingsPage = {
         </div>
 
         <div v-if="tab==='categories'">
-          <div class="card">
+          <div v-if="global.role === 'admin'" class="card">
             <div class="form-group">
               <label>新建分类</label>
               <div class="flex gap-2">
@@ -77,14 +78,14 @@ const SettingsPage = {
             <div class="trade-item" v-for="c in categories" :key="c.id">
               <div class="row">
                 <strong>{{ c.name }}</strong>
-                <button v-if="c.name !== '其它'" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;" @click="removeCategory(c.id)">删除</button>
+                <button v-if="c.name !== '其它' && global.role === 'admin'" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;" @click="removeCategory(c.id)">删除</button>
               </div>
             </div>
           </div>
         </div>
 
         <div v-if="tab==='products'">
-          <div class="card">
+          <div v-if="global.role === 'admin'" class="card">
             <div class="form-group">
               <label>筛选分类</label>
               <select class="form-control" v-model="catFilter">
@@ -110,7 +111,7 @@ const SettingsPage = {
             <div class="trade-item" v-for="p in products" :key="p.id">
               <div class="row">
                 <strong>{{ p.name }}</strong>
-                <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;" @click="removeProduct(p.id)">删除</button>
+                <button v-if="global.role === 'admin'" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;" @click="removeProduct(p.id)">删除</button>
               </div>
             </div>
           </div>

@@ -80,7 +80,10 @@ const TradeBuyPage = {
         </select>
       </div>
       <div class="container">
-        <div class="card">
+        <div v-if="global.role !== 'admin'" class="card" style="text-align:center; color:var(--text-secondary); padding:40px;">
+          访客模式，无法录入交易
+        </div>
+        <div class="card" v-else>
           <div class="form-group">
             <label>分类</label>
             <select class="form-control" v-model="form.category_id">

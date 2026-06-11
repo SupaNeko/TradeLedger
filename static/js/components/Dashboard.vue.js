@@ -79,7 +79,7 @@ const DashboardPage = {
   template: `
     <div class="page-content">
       <div class="app-header">
-        <h1>TradeLedger</h1>
+        <h1>TradeLedger <span v-if="global.role === 'guest'" style="font-size:0.7rem;color:var(--warning);vertical-align:middle;">访客</span></h1>
         <select class="account-select" v-model="global.currentAccountId">
           <option v-for="a in global.accounts" :key="a.id" :value="a.id">{{ a.name }}</option>
         </select>

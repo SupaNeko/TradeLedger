@@ -13,6 +13,7 @@
 - **资金上限管理**：买入时校验（金额 + 手续费）不超过当前可用闲钱。可用闲钱 = 初始资金上限 + 历史已实现盈亏 - 当前持仓总成本 - 历史总手续费。
 - **品种分类**：支持一级分类（如股票、基金、加密货币等），买入/卖出时可按分类筛选品种。
 - **密码保护**：通过环境变量设置访问密码，登录后方可查看和操作数据。
+- **访客模式**：通过独立环境变量 `TRADE_LEDGER_GUEST_PASSWORD` 设置访客密码，访客只能查看数据，无法记录买卖、修改设置或新增账户。
 - **移动端适配**：响应式布局，支持手机浏览器访问。
 
 ---
@@ -35,8 +36,11 @@ pip install -r requirements.txt
 创建 `.env` 文件：
 
 ```
-TRADE_LEDGER_PASSWORD=你的访问密码
+TRADE_LEDGER_PASSWORD=你的管理员密码
+TRADE_LEDGER_GUEST_PASSWORD=你的访客密码
 ```
+
+> `TRADE_LEDGER_GUEST_PASSWORD` 为可选项。不设置时无访客模式。
 
 ---
 
@@ -46,11 +50,13 @@ TRADE_LEDGER_PASSWORD=你的访问密码
 
 ```bash
 # Linux / macOS
-export TRADE_LEDGER_PASSWORD="你的访问密码"
+export TRADE_LEDGER_PASSWORD="你的管理员密码"
+export TRADE_LEDGER_GUEST_PASSWORD="你的访客密码"   # 可选
 python main.py
 
 # Windows PowerShell
-$env:TRADE_LEDGER_PASSWORD="你的访问密码"
+$env:TRADE_LEDGER_PASSWORD="你的管理员密码"
+$env:TRADE_LEDGER_GUEST_PASSWORD="你的访客密码"    # 可选
 python main.py
 ```
 
@@ -77,11 +83,13 @@ server {
 
 ```bash
 # Linux / macOS
-export TRADE_LEDGER_PASSWORD="你的访问密码"
+export TRADE_LEDGER_PASSWORD="你的管理员密码"
+export TRADE_LEDGER_GUEST_PASSWORD="你的访客密码"   # 可选
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 # Windows PowerShell
-$env:TRADE_LEDGER_PASSWORD="你的访问密码"
+$env:TRADE_LEDGER_PASSWORD="你的管理员密码"
+$env:TRADE_LEDGER_GUEST_PASSWORD="你的访客密码"    # 可选
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 

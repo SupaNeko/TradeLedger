@@ -11,6 +11,10 @@ async function api(path, opts = {}) {
     window.location.hash = '#/login';
     throw new Error('Unauthorized');
   }
+  if (res.status === 403) {
+    const data = await res.json().catch(() => ({ detail: 'Forbidden' }));
+    throw new Error(data.detail || 'Guest cannot perform this action');
+  }
   if (!res.ok) {
     const data = await res.json().catch(() => ({ detail: 'Request failed' }));
     throw new Error(data.detail || 'Request failed');
@@ -19,10 +23,24 @@ async function api(path, opts = {}) {
   return res.json();
 }
 
+const globalState = Vue.reactive({
+  currentAccountId: null,
+  accounts: [],
+  role: null,
+});
+
 const $api = {
-  login: (password) => api('/api/auth/login', { method: 'POST', body: JSON.stringify({ password }) }),
+  login: async (password) => {
+    const data = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ password }) });
+    globalState.role = data.role;
+    return data;
+  },
   logout: () => api('/api/auth/logout', { method: 'POST' }),
-  me: () => api('/api/auth/me'),
+  me: async () => {
+    const data = await api('/api/auth/me');
+    globalState.role = data.role;
+    return data;
+  },
 
   getAccounts: () => api('/api/accounts'),
   createAccount: (data) => api('/api/accounts', { method: 'POST', body: JSON.stringify(data) }),
@@ -50,11 +68,6 @@ const $api = {
   getHoldings: (accountId) => api(`/api/dashboard/holdings?account_id=${accountId}`),
   getProfits: (accountId) => api(`/api/dashboard/profits?account_id=${accountId}`),
 };
-
-const globalState = Vue.reactive({
-  currentAccountId: null,
-  accounts: [],
-});
 
 const loadAccounts = async () => {
   try {
