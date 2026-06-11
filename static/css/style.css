@@ -261,33 +261,35 @@ select.form-control { appearance: none; }
 /* Page content padding for bottom nav */
 .page-content { padding-bottom: 80px; }
 
-/* Desktop sidebar instead of bottom nav */
+/* Desktop: turn bottom-nav into left sidebar */
 @media (min-width: 768px) {
-  .layout-desktop {
-    display: flex;
-    flex-direction: row;
-  }
-  .sidebar {
-    width: 220px;
-    background: var(--card);
-    border-right: 1px solid var(--border);
-    min-height: 100vh;
-    padding: 16px;
+  .bottom-nav {
     position: fixed;
     left: 0; top: 0; bottom: 0;
+    right: auto;
+    width: 200px;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    border-top: none;
+    border-right: 1px solid var(--border);
+    padding: 16px 0;
+    gap: 4px;
   }
-  .sidebar a {
-    display: flex;
-    align-items: center;
+  .bottom-nav a {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 12px 20px;
+    font-size: 0.95rem;
     gap: 10px;
-    padding: 12px;
-    border-radius: 10px;
-    text-decoration: none;
-    color: var(--text);
-    margin-bottom: 4px;
+    border-radius: 0;
   }
-  .sidebar a.active { background: rgba(37,99,235,0.08); color: var(--primary); }
-  .main-area { margin-left: 220px; flex: 1; }
-  .bottom-nav { display: none; }
-  .page-content { padding-bottom: 24px; }
+  .bottom-nav a.active {
+    background: rgba(37,99,235,0.08);
+    color: var(--primary);
+  }
+  .bottom-nav .icon { font-size: 1.1rem; margin-bottom: 0; }
+  .page-content { padding-bottom: 24px; padding-left: 200px; }
+  .app-header { left: 200px; }
+  .container { max-width: 800px; }
 }
