@@ -218,6 +218,19 @@ def dashboard_holdings(account_id: int, user=Depends(require_auth)):
         "total_cost": stats["current_holdings_cost"]
     }
 
+@app.get("/api/dashboard/profits")
+def dashboard_profits(account_id: int, user=Depends(require_auth)):
+    with get_db() as conn:
+        rows = conn.execute("""
+            SELECT p.name as product_name, COALESCE(SUM(t.profit), 0) as total_profit
+            FROM trades t
+            JOIN products p ON t.product_id = p.id
+            WHERE t.account_id = ? AND t.direction = 'sell'
+            GROUP BY t.product_id
+            ORDER BY total_profit DESC
+        """, (account_id,)).fetchall()
+        return [dict(r) for r in rows]
+
 # Static files must be mounted last and catch-all
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 

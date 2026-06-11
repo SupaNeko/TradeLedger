@@ -3,8 +3,10 @@ const DashboardPage = {
     const global = Vue.inject('global');
     const summary = Vue.ref(null);
     const holdings = Vue.ref([]);
+    const profits = Vue.ref([]);
     const recentTrades = Vue.ref([]);
     let chartInstance = null;
+    let profitChartInstance = null;
 
     const loadData = async () => {
       if (!global.currentAccountId) return;
@@ -12,9 +14,11 @@ const DashboardPage = {
         summary.value = await $api.getSummary(global.currentAccountId);
         const h = await $api.getHoldings(global.currentAccountId);
         holdings.value = h.holdings || [];
+        profits.value = await $api.getProfits(global.currentAccountId);
         const trades = await $api.getTrades({ account_id: global.currentAccountId, limit: 5 });
         recentTrades.value = trades.slice(0, 5);
         renderChart();
+        renderProfitChart();
       } catch (e) {
         console.error(e);
       }
@@ -31,18 +35,36 @@ const DashboardPage = {
         type: 'doughnut',
         data: {
           labels,
-          datasets: [{
-            data,
-            backgroundColor: colors,
-            borderWidth: 2,
-            borderColor: '#fff'
-          }]
+          datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }]
         },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 12 } } }
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 12 } } } }
+        }
+      });
+    };
+
+    const renderProfitChart = () => {
+      const ctx = document.getElementById('profitChart');
+      if (!ctx) return;
+      if (profitChartInstance) { profitChartInstance.destroy(); }
+      const labels = profits.value.map(p => p.product_name);
+      const data = profits.value.map(p => p.total_profit);
+      const bgColors = profits.value.map(p => p.total_profit >= 0 ? 'rgba(22,163,74,0.8)' : 'rgba(220,38,38,0.8)');
+      profitChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{ data, backgroundColor: bgColors, borderRadius: 6, borderSkipped: false }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              grid: { color: '#e5e7eb' },
+              ticks: { callback: v => v.toLocaleString('zh-CN', { minimumFractionDigits: 0 }) }
+            }
           }
         }
       });
@@ -52,7 +74,7 @@ const DashboardPage = {
 
     const fmt = (n) => (n == null ? '-' : n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 
-    return { global, summary, holdings, recentTrades, fmt };
+    return { global, summary, holdings, profits, recentTrades, fmt };
   },
   template: `
     <div class="page-content">
@@ -93,6 +115,13 @@ const DashboardPage = {
           <div class="card-title">持仓分布</div>
           <div class="chart-container">
             <canvas id="holdingsChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card" v-if="profits.length">
+          <div class="card-title">品种盈亏</div>
+          <div class="chart-container" style="height: 300px;">
+            <canvas id="profitChart"></canvas>
           </div>
         </div>
 
