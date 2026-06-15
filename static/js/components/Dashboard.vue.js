@@ -72,6 +72,8 @@ const DashboardPage = {
 
     const fmt = (n) => (n == null ? '-' : n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 
+    Vue.watch(() => global.currentAccountId, loadData, { immediate: true });
+
     return { global, summary, holdings, profits, recentTrades, fmt };
   },
   template: `
