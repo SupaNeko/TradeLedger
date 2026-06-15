@@ -7,6 +7,7 @@ const DashboardPage = {
     const recentTrades = Vue.ref([]);
     let chartInstance = null;
     let profitChartInstance = null;
+    let qtyChartInstance = null;
 
     const loadData = async () => {
       if (!global.currentAccountId) return;
@@ -19,6 +20,7 @@ const DashboardPage = {
         recentTrades.value = trades.slice(0, 5);
         renderChart();
         renderProfitChart();
+        renderQtyChart();
       } catch (e) {
         console.error(e);
       }
@@ -72,6 +74,32 @@ const DashboardPage = {
 
     Vue.watch(() => global.currentAccountId, loadData, { immediate: true });
 
+    const renderQtyChart = () => {
+      const ctx = document.getElementById('qtyChart');
+      if (!ctx) return;
+      if (qtyChartInstance) { qtyChartInstance.destroy(); }
+      const labels = holdings.value.map(h => h.product_name);
+      const data = holdings.value.map(h => h.quantity);
+      const bgColors = holdings.value.map((_, i) => ['#2563eb','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2','#be123c','#4338ca'][i % 8]);
+      qtyChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{ data, backgroundColor: bgColors, borderRadius: 6, borderSkipped: false }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              grid: { color: '#e5e7eb' },
+              ticks: { callback: v => v.toLocaleString('zh-CN', { minimumFractionDigits: 0 }) }
+            }
+          }
+        }
+      });
+    };
+
     const fmt = (n) => (n == null ? '-' : n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 
     return { global, summary, holdings, profits, recentTrades, fmt };
@@ -115,6 +143,13 @@ const DashboardPage = {
           <div class="card-title">持仓分布</div>
           <div class="chart-container">
             <canvas id="holdingsChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card" v-if="holdings.length">
+          <div class="card-title">持仓数量</div>
+          <div class="chart-container" style="height: 300px;">
+            <canvas id="qtyChart"></canvas>
           </div>
         </div>
 
