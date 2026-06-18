@@ -95,8 +95,8 @@ html, body {
   font-size: 1.3rem;
   font-weight: 700;
 }
-.value.positive { color: var(--success); }
-.value.negative { color: var(--danger); }
+.value.positive { color: var(--danger); }
+.value.negative { color: var(--success); }
 
 /* Forms */
 .form-group { margin-bottom: 16px; }

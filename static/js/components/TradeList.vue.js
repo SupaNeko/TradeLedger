@@ -86,7 +86,7 @@ const TradeListPage = {
             </div>
             <div class="row" style="font-size: 0.85rem; color: var(--text-secondary);">
               <div>单价: {{ t.price }} × 数量: {{ t.quantity }}</div>
-              <div>手续费: {{ t.fee }} <span v-if="t.profit != null" style="color: var(--success); margin-left: 8px;">盈亏: {{ t.profit.toFixed(2) }}</span></div>
+              <div>手续费: {{ t.fee }} <span v-if="t.profit != null" :style="{color: t.profit >= 0 ? 'var(--danger)' : 'var(--success)', marginLeft: '8px'}">盈亏: {{ t.profit.toFixed(2) }}</span></div>
             </div>
             <div class="row" v-if="t.platform || t.remark">
               <div style="font-size: 0.85rem; color: var(--text-secondary);">{{ t.platform }} {{ t.remark }}</div>

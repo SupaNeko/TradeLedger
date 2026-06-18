@@ -16,6 +16,7 @@ const TradeSellPage = {
     const loading = Vue.ref(false);
     const error = Vue.ref('');
     const success = Vue.ref('');
+    const profit = Vue.ref(null);
 
     const loadPositions = async () => {
       if (!form.account_id) return;
@@ -63,7 +64,8 @@ const TradeSellPage = {
           trade_date: form.trade_date
         };
         const res = await $api.sell(payload);
-        success.value = `卖出成功，本笔盈亏: ${res.profit.toFixed(2)}`;
+        profit.value = res.profit;
+        success.value = '卖出成功';
         form.price = ''; form.quantity = ''; form.amount = ''; form.fee = 0; form.platform = ''; form.remark = '';
         await loadPositions();
       } catch (e) {
@@ -75,7 +77,7 @@ const TradeSellPage = {
 
     Vue.onMounted(loadPositions);
 
-    return { global, form, positions, selectedPosition, estimatedProfit, loading, error, success, calcAmount, calcQuantity, submit };
+    return { global, form, positions, selectedPosition, estimatedProfit, loading, error, success, profit, calcAmount, calcQuantity, submit };
   },
   template: `
     <div class="page-content">
@@ -118,7 +120,7 @@ const TradeSellPage = {
             <input type="number" class="form-control" v-model="form.fee" placeholder="0">
           </div>
           <div v-if="estimatedProfit !== null" style="margin-bottom: 16px; font-size: 0.95rem;">
-            预估盈亏: <strong :style="{color: estimatedProfit >= 0 ? 'var(--success)' : 'var(--danger)'}">{{ estimatedProfit.toFixed(2) }}</strong>
+            预估盈亏: <strong :style="{color: estimatedProfit >= 0 ? 'var(--danger)' : 'var(--success)'}">{{ estimatedProfit.toFixed(2) }}</strong>
           </div>
           <div class="form-group">
             <label>平台</label>
@@ -133,7 +135,7 @@ const TradeSellPage = {
             <input type="date" class="form-control" v-model="form.trade_date">
           </div>
           <div v-if="error" style="color: var(--danger); margin-bottom: 12px;">{{ error }}</div>
-          <div v-if="success" style="color: var(--success); margin-bottom: 12px;">{{ success }}</div>
+          <div v-if="success" style="margin-bottom: 12px;">{{ success }}，本笔盈亏: <span :style="{color: profit >= 0 ? 'var(--danger)' : 'var(--success)'}">{{ profit.toFixed(2) }}</span></div>
           <button class="btn btn-primary btn-block" :disabled="loading" @click="submit">保存卖出</button>
         </div>
       </div>

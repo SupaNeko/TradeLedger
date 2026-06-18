@@ -57,7 +57,7 @@ const AccountsPage = {
             </div>
             <div class="row" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">
               <div>持仓: {{ fmt(a.current_holdings_cost) }}</div>
-              <div>已实现盈亏: <span :style="{color: a.realized_profit >= 0 ? 'var(--success)' : 'var(--danger)'}">{{ fmt(a.realized_profit) }}</span></div>
+              <div>已实现盈亏: <span :style="{color: a.realized_profit >= 0 ? 'var(--danger)' : 'var(--success)'}">{{ fmt(a.realized_profit) }}</span></div>
             </div>
             <div class="row" style="font-size: 0.85rem; color: var(--text-secondary);">
               <div>可用: {{ fmt(a.available) }}</div>

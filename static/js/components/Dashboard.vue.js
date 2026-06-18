@@ -50,7 +50,7 @@ const DashboardPage = {
       if (profitChartInstance) { profitChartInstance.destroy(); }
       const labels = profits.value.map(p => p.product_name);
       const data = profits.value.map(p => p.total_profit);
-      const bgColors = profits.value.map(p => p.total_profit >= 0 ? 'rgba(22,163,74,0.8)' : 'rgba(220,38,38,0.8)');
+      const bgColors = profits.value.map(p => p.total_profit >= 0 ? 'rgba(220,38,38,0.8)' : 'rgba(22,163,74,0.8)');
       profitChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
