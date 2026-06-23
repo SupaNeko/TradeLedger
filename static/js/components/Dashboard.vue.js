@@ -126,12 +126,14 @@ const DashboardPage = {
                 <tr style="border-bottom: 1px solid var(--border);">
                   <th style="text-align: left; padding: 8px 12px;">品种</th>
                   <th style="text-align: right; padding: 8px 12px;">数量</th>
+                  <th style="text-align: right; padding: 8px 12px;">均价</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="h in holdings" :key="h.product_id" style="border-bottom: 1px solid var(--border);">
                   <td style="padding: 8px 12px;">{{ h.product_name }}</td>
                   <td style="text-align: right; padding: 8px 12px;">{{ h.quantity }}</td>
+                  <td style="text-align: right; padding: 8px 12px;">{{ h.avg_cost.toFixed(4) }}</td>
                 </tr>
               </tbody>
             </table>
