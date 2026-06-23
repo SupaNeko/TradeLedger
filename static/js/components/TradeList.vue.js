@@ -36,13 +36,41 @@ const TradeListPage = {
       await loadTrades();
     };
 
+    const editingId = Vue.ref(null);
+    const editRemark = Vue.ref('');
+
+    const startEdit = (t) => {
+      editingId.value = t.id;
+      editRemark.value = t.remark || '';
+      Vue.nextTick(() => {
+        const input = document.querySelector(`input[data-edit-id="${t.id}"]`);
+        if (input) input.focus();
+      });
+    };
+
+    const saveRemark = async (t) => {
+      if (editingId.value !== t.id) return;
+      try {
+        await $api.updateTrade(t.id, { remark: editRemark.value });
+        t.remark = editRemark.value;
+      } catch (e) {
+        console.error(e);
+      }
+      editingId.value = null;
+    };
+
+    const cancelEdit = () => {
+      editingId.value = null;
+      editRemark.value = '';
+    };
+
     Vue.onMounted(async () => {
       await loadCategories();
       await loadProducts();
       await loadTrades();
     });
 
-    return { global, trades, filters, categories, products, remove };
+    return { global, trades, filters, categories, products, remove, editingId, editRemark, startEdit, saveRemark, cancelEdit };
   },
   template: `
     <div class="page-content">
@@ -88,8 +116,25 @@ const TradeListPage = {
               <div>单价: {{ t.price }} × 数量: {{ t.quantity }}</div>
               <div>手续费: {{ t.fee }} <span v-if="t.profit != null" :style="{color: t.profit >= 0 ? 'var(--danger)' : 'var(--success)', marginLeft: '8px'}">盈亏: {{ t.profit.toFixed(2) }}</span></div>
             </div>
-            <div class="row" v-if="t.platform || t.remark">
-              <div style="font-size: 0.85rem; color: var(--text-secondary);">{{ t.platform }} {{ t.remark }}</div>
+            <div class="row" v-if="global.role === 'admin'" style="margin-top: 4px;">
+              <div v-if="editingId === t.id" style="display: flex; gap: 8px; align-items: center; width: 100%;">
+                <input
+                  type="text"
+                  class="form-control"
+                  v-model="editRemark"
+                  @blur="saveRemark(t)"
+                  @keyup.enter="saveRemark(t)"
+                  @keyup.esc="cancelEdit"
+                  style="flex: 1; font-size: 0.85rem; padding: 6px 10px;"
+                  :data-edit-id="t.id"
+                />
+              </div>
+              <div v-else @click="startEdit(t)" style="font-size: 0.85rem; color: var(--text-secondary); cursor: pointer; min-height: 20px;">
+                {{ t.remark || '点击添加备注' }}
+              </div>
+            </div>
+            <div class="row" v-else-if="t.remark" style="margin-top: 4px;">
+              <div style="font-size: 0.85rem; color: var(--text-secondary);">{{ t.remark }}</div>
             </div>
             <div class="row" style="margin-top: 8px;" v-if="global.role === 'admin'">
               <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem;" @click="remove(t.id)">删除</button>

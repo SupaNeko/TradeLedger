@@ -63,6 +63,7 @@ const $api = {
   buy: (data) => api('/api/trades/buy', { method: 'POST', body: JSON.stringify(data) }),
   sell: (data) => api('/api/trades/sell', { method: 'POST', body: JSON.stringify(data) }),
   deleteTrade: (id) => api(`/api/trades/${id}`, { method: 'DELETE' }),
+  updateTrade: (id, data) => api(`/api/trades/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
 
   getSummary: (accountId) => api(`/api/dashboard/summary?account_id=${accountId}`),
   getHoldings: (accountId) => api(`/api/dashboard/holdings?account_id=${accountId}`),

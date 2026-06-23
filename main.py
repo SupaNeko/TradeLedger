@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from database import init_db, get_db
 from models import (
     LoginPayload, AccountCreate, AccountUpdate,
-    CategoryCreate, ProductCreate, TradeBuy, TradeSell
+    CategoryCreate, ProductCreate, TradeBuy, TradeSell, TradeUpdate
 )
 from auth import check_password, create_session, delete_session, require_auth, require_admin
 from services.calculator import calc_account_stats, validate_buy, validate_sell, calc_position
@@ -193,6 +193,13 @@ def sell(payload: TradeSell, user=Depends(require_admin)):
         )
         conn.commit()
         return {"id": cur.lastrowid, "profit": profit}
+
+@app.put("/api/trades/{trade_id}")
+def update_trade(trade_id: int, payload: TradeUpdate, user=Depends(require_admin)):
+    with get_db() as conn:
+        conn.execute("UPDATE trades SET remark=? WHERE id=?", (payload.remark or '', trade_id))
+        conn.commit()
+    return {"ok": True}
 
 @app.delete("/api/trades/{trade_id}")
 def delete_trade(trade_id: int, user=Depends(require_admin)):

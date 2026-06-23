@@ -39,5 +39,8 @@ class TradeSell(BaseModel):
     remark: str = ""
     trade_date: date
 
+class TradeUpdate(BaseModel):
+    remark: Optional[str] = None
+
 class LoginPayload(BaseModel):
     password: str
