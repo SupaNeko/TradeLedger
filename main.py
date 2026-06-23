@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from database import init_db, get_db
 from models import (
     LoginPayload, AccountCreate, AccountUpdate,
-    CategoryCreate, ProductCreate, TradeBuy, TradeSell, TradeUpdate
+    CategoryCreate, ProductCreate, ProductUpdate, TradeBuy, TradeSell, TradeUpdate
 )
 from auth import check_password, create_session, delete_session, require_auth, require_admin
 from services.calculator import calc_account_stats, validate_buy, validate_sell, calc_position
@@ -121,9 +121,19 @@ def list_products(category_id: int = None, user=Depends(require_auth)):
 @app.post("/api/products")
 def create_product(payload: ProductCreate, user=Depends(require_admin)):
     with get_db() as conn:
-        cur = conn.execute("INSERT INTO products (category_id, name) VALUES (?, ?)", (payload.category_id, payload.name))
+        cur = conn.execute("INSERT INTO products (category_id, name, remark) VALUES (?, ?, ?)", (payload.category_id, payload.name, payload.remark))
         conn.commit()
         return {"id": cur.lastrowid}
+
+@app.put("/api/products/{product_id}")
+def update_product(product_id: int, payload: ProductUpdate, user=Depends(require_admin)):
+    with get_db() as conn:
+        if payload.name is not None:
+            conn.execute("UPDATE products SET name=? WHERE id=?", (payload.name, product_id))
+        if payload.remark is not None:
+            conn.execute("UPDATE products SET remark=? WHERE id=?", (payload.remark, product_id))
+        conn.commit()
+    return {"ok": True}
 
 @app.delete("/api/products/{product_id}")
 def delete_product(product_id: int, user=Depends(require_admin)):

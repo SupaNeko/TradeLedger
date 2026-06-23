@@ -29,7 +29,8 @@ def init_db():
         CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             category_id INTEGER NOT NULL REFERENCES categories(id),
-            name TEXT NOT NULL
+            name TEXT NOT NULL,
+            remark TEXT
         );
         CREATE TABLE IF NOT EXISTS trades (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

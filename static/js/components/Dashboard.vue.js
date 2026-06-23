@@ -131,7 +131,10 @@ const DashboardPage = {
               </thead>
               <tbody>
                 <tr v-for="h in holdings" :key="h.product_id" style="border-bottom: 1px solid var(--border);">
-                  <td style="padding: 8px 12px;">{{ h.product_name }}</td>
+                  <td style="padding: 8px 12px;">
+                    <div>{{ h.product_name }}</div>
+                    <div v-if="h.remark" style="font-size: 0.75rem; color: var(--text-secondary);">{{ h.remark }}</div>
+                  </td>
                   <td style="text-align: right; padding: 8px 12px;">{{ h.quantity }}</td>
                   <td style="text-align: right; padding: 8px 12px;">{{ h.avg_cost.toFixed(4) }}</td>
                 </tr>

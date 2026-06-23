@@ -52,11 +52,14 @@ def calc_account_stats(account_id: int):
         qty, avg = calc_position(account_id, pid)
         if qty > 0:
             with get_db() as conn:
-                name = conn.execute("SELECT name FROM products WHERE id=?", (pid,)).fetchone()["name"]
+                prod = conn.execute("SELECT name, remark FROM products WHERE id=?", (pid,)).fetchone()
+            name = prod["name"] if prod else ""
+            remark = prod["remark"] if prod else ""
             cost = qty * avg
             holdings.append({
                 "product_id": pid,
                 "product_name": name,
+                "remark": remark,
                 "quantity": qty,
                 "avg_cost": avg,
                 "cost": cost

@@ -53,6 +53,7 @@ const $api = {
 
   getProducts: (categoryId) => api('/api/products' + (categoryId ? `?category_id=${categoryId}` : '')),
   createProduct: (data) => api('/api/products', { method: 'POST', body: JSON.stringify(data) }),
+  updateProduct: (id, data) => api(`/api/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteProduct: (id) => api(`/api/products/${id}`, { method: 'DELETE' }),
 
   getTrades: (params) => {

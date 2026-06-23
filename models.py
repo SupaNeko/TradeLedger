@@ -16,6 +16,11 @@ class CategoryCreate(BaseModel):
 class ProductCreate(BaseModel):
     category_id: int
     name: str
+    remark: str = ""
+
+class ProductUpdate(BaseModel):
+    name: Optional[str] = None
+    remark: Optional[str] = None
 
 class TradeBuy(BaseModel):
     account_id: int
