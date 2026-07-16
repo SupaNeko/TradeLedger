@@ -69,6 +69,8 @@ const $api = {
   getSummary: (accountId) => api(`/api/dashboard/summary?account_id=${accountId}`),
   getHoldings: (accountId) => api(`/api/dashboard/holdings?account_id=${accountId}`),
   getProfits: (accountId) => api(`/api/dashboard/profits?account_id=${accountId}`),
+  getProfitRatios: (accountId) => api(`/api/dashboard/profit-ratios?account_id=${accountId}`),
+  getProfitByCategory: (accountId) => api(`/api/dashboard/profit-by-category?account_id=${accountId}`),
 };
 
 const loadAccounts = async () => {

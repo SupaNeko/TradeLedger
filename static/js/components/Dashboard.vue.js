@@ -4,9 +4,13 @@ const DashboardPage = {
     const summary = Vue.ref(null);
     const holdings = Vue.ref([]);
     const profits = Vue.ref([]);
+    const profitRatios = Vue.ref([]);
+    const profitByCategory = Vue.ref([]);
     const recentTrades = Vue.ref([]);
     let chartInstance = null;
     let profitChartInstance = null;
+    let ratioChartInstance = null;
+    let categoryProfitChartInstance = null;
 
     const loadData = async () => {
       if (!global.currentAccountId) return;
@@ -15,10 +19,14 @@ const DashboardPage = {
         const h = await $api.getHoldings(global.currentAccountId);
         holdings.value = h.holdings || [];
         profits.value = await $api.getProfits(global.currentAccountId);
+        profitRatios.value = await $api.getProfitRatios(global.currentAccountId);
+        profitByCategory.value = await $api.getProfitByCategory(global.currentAccountId);
         const trades = await $api.getTrades({ account_id: global.currentAccountId, limit: 5 });
         recentTrades.value = trades.slice(0, 5);
         renderChart();
         renderProfitChart();
+        renderRatioChart();
+        renderCategoryProfitChart();
       } catch (e) {
         console.error(e);
       }
@@ -70,11 +78,70 @@ const DashboardPage = {
       });
     };
 
+    const renderRatioChart = () => {
+      const ctx = document.getElementById('ratioChart');
+      if (!ctx) return;
+      if (ratioChartInstance) { ratioChartInstance.destroy(); }
+      const labels = profitRatios.value.map(r => r.product_name);
+      const data = profitRatios.value.map(r => r.profit_ratio);
+      const bgColors = profitRatios.value.map(r => r.profit_ratio >= 0 ? 'rgba(220,38,38,0.8)' : 'rgba(22,163,74,0.8)');
+      ratioChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{ data, backgroundColor: bgColors, borderRadius: 6, borderSkipped: false }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => `${(ctx.raw * 100).toFixed(2)}%`
+              }
+            }
+          },
+          scales: {
+            y: {
+              grid: { color: '#e5e7eb' },
+              ticks: { callback: v => `${(v * 100).toFixed(1)}%` }
+            }
+          }
+        }
+      });
+    };
+
+    const renderCategoryProfitChart = () => {
+      const ctx = document.getElementById('categoryProfitChart');
+      if (!ctx) return;
+      if (categoryProfitChartInstance) { categoryProfitChartInstance.destroy(); }
+      const labels = profitByCategory.value.map(c => c.category_name);
+      const data = profitByCategory.value.map(c => c.total_profit);
+      const bgColors = profitByCategory.value.map(c => c.total_profit >= 0 ? 'rgba(220,38,38,0.8)' : 'rgba(22,163,74,0.8)');
+      categoryProfitChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{ data, backgroundColor: bgColors, borderRadius: 6, borderSkipped: false }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              grid: { color: '#e5e7eb' },
+              ticks: { callback: v => v.toLocaleString('zh-CN', { minimumFractionDigits: 0 }) }
+            }
+          }
+        }
+      });
+    };
+
     const fmt = (n) => (n == null ? '-' : n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 
     Vue.watch(() => global.currentAccountId, loadData, { immediate: true });
 
-    return { global, summary, holdings, profits, recentTrades, fmt };
+    return { global, summary, holdings, profits, profitRatios, profitByCategory, recentTrades, fmt };
   },
   template: `
     <div class="page-content">
@@ -147,6 +214,20 @@ const DashboardPage = {
           <div class="card-title">品种盈亏</div>
           <div class="chart-container" style="height: 300px;">
             <canvas id="profitChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card" v-if="profitRatios.length">
+          <div class="card-title">盈亏比例</div>
+          <div class="chart-container" style="height: 300px;">
+            <canvas id="ratioChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card" v-if="profitByCategory.length">
+          <div class="card-title">分类盈亏</div>
+          <div class="chart-container" style="height: 300px;">
+            <canvas id="categoryProfitChart"></canvas>
           </div>
         </div>
 

@@ -9,7 +9,7 @@ from models import (
     CategoryCreate, ProductCreate, ProductUpdate, TradeBuy, TradeSell, TradeUpdate
 )
 from auth import check_password, create_session, delete_session, require_auth, require_admin
-from services.calculator import calc_account_stats, validate_buy, validate_sell, calc_position
+from services.calculator import calc_account_stats, validate_buy, validate_sell, calc_position, calc_profit_ratios
 
 load_dotenv()
 PASSWORD = os.getenv("TRADE_LEDGER_PASSWORD")
@@ -245,6 +245,25 @@ def dashboard_profits(account_id: int, user=Depends(require_auth)):
             JOIN products p ON t.product_id = p.id
             WHERE t.account_id = ? AND t.direction = 'sell'
             GROUP BY t.product_id
+            ORDER BY total_profit DESC
+        """, (account_id,)).fetchall()
+        return [dict(r) for r in rows]
+
+@app.get("/api/dashboard/profit-ratios")
+def dashboard_profit_ratios(account_id: int, user=Depends(require_auth)):
+    ratios = calc_profit_ratios(account_id)
+    return [r for r in ratios if r["sold_cost"] > 1e-9]
+
+@app.get("/api/dashboard/profit-by-category")
+def dashboard_profit_by_category(account_id: int, user=Depends(require_auth)):
+    with get_db() as conn:
+        rows = conn.execute("""
+            SELECT c.name as category_name, COALESCE(SUM(t.profit), 0) as total_profit
+            FROM trades t
+            JOIN products p ON t.product_id = p.id
+            JOIN categories c ON p.category_id = c.id
+            WHERE t.account_id = ? AND t.direction = 'sell'
+            GROUP BY c.id
             ORDER BY total_profit DESC
         """, (account_id,)).fetchall()
         return [dict(r) for r in rows]

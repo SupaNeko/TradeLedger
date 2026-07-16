@@ -89,3 +89,40 @@ def validate_sell(account_id: int, product_id: int, quantity: float):
     if quantity > hold_qty + 1e-9:
         return False, f"持仓不足，当前持仓: {hold_qty:.4f}", 0.0
     return True, "", avg_cost
+
+def calc_profit_ratios(account_id: int):
+    """Returns profit ratio per product: total_profit / (total_buy_cost - current_holding_cost)."""
+    with get_db() as conn:
+        rows = conn.execute(
+            "SELECT DISTINCT product_id FROM trades WHERE account_id=?",
+            (account_id,)
+        ).fetchall()
+        product_ids = [r["product_id"] for r in rows]
+
+    results = []
+    for pid in product_ids:
+        trades = get_trades_for_account_product(account_id, pid)
+        total_buy_cost = sum(
+            t["price"] * t["quantity"] + t["fee"] for t in trades if t["direction"] == "buy"
+        )
+        total_profit = sum(
+            (t["profit"] or 0) for t in trades if t["direction"] == "sell"
+        )
+        hold_qty, avg_cost = calc_position(account_id, pid)
+        current_holding_cost = hold_qty * avg_cost
+        sold_cost = total_buy_cost - current_holding_cost
+        ratio = total_profit / sold_cost if sold_cost > 1e-9 else 0.0
+
+        with get_db() as conn:
+            prod = conn.execute("SELECT name FROM products WHERE id=?", (pid,)).fetchone()
+        name = prod["name"] if prod else ""
+        results.append({
+            "product_id": pid,
+            "product_name": name,
+            "total_profit": total_profit,
+            "total_buy_cost": total_buy_cost,
+            "current_holding_cost": current_holding_cost,
+            "sold_cost": sold_cost,
+            "profit_ratio": ratio
+        })
+    return sorted(results, key=lambda x: x["profit_ratio"], reverse=True)
